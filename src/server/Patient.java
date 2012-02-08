@@ -2,10 +2,11 @@ package server;
 
 public class Patient extends Person {
 	private String nurseId, doctorId;
+	private Journal journal;
 
-	public Patient(String id, String name, String unit, String hospital) {
+	public Patient(String id, String name, String unit, String hospital, Journal j) {
 		super(id, name, unit, hospital);
-		// TODO Auto-generated constructor stub
+		journal = j;
 	}
 
 	/**
