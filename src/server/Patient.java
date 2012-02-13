@@ -1,12 +1,12 @@
 package server;
 
 public class Patient extends Person {
-	private String nurseId, doctorId;
+	private String nurseId, doctorId; // Borde liggar i JournalEntry ist?  "Each patient has one or serveral medical records"
 	private Journal journal;
 
-	public Patient(String id, String name, String unit, String hospital, Journal j) {
-		super(id, name, unit, hospital);
-		journal = j;
+	public Patient(String id, String name) {
+		super(id, name);
+		journal = new Journal(this);
 	}
 
 	/**
