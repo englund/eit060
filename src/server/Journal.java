@@ -21,5 +21,11 @@ public class Journal {
 	public ArrayList<JournalEntry> getEntries() {
 		return entries;
 	}
+	public void journalPrint(){
+		for (int i = 0; i< entries.size(); i++) {
+			JournalEntry e = entries.get(i);
+			System.out.println(i + ". " + e.getHospital() + " " + e.getUnit() + " " + e.getDoctorId());
+		}
+	}
 	
 }

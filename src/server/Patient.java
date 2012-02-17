@@ -1,40 +1,21 @@
 package server;
 
-public class Patient extends Person {
-	private String nurseId, doctorId; // Borde liggar i JournalEntry ist?  "Each patient has one or serveral medical records"
+public class Patient {
 	private Journal journal;
+	private String id, name;
 
 	public Patient(String id, String name) {
-		super(id, name);
+		//super(id, name);
+		this.id = id;
+		this.name = name;
 		journal = new Journal(this);
 	}
 
-	/**
-	 * @return the nurseId
-	 */
-	public String getNurseId() {
-		return nurseId;
+	public Journal getJournal(){
+		return journal;
 	}
-
-	/**
-	 * @param nurseId the nurseId to set
-	 */
-	public void setNurseId(String nurseId) {
-		this.nurseId = nurseId;
-	}
-
-	/**
-	 * @return the doctorId
-	 */
-	public String getDoctorId() {
-		return doctorId;
-	}
-
-	/**
-	 * @param doctorId the doctorId to set
-	 */
-	public void setDoctorId(String doctorId) {
-		this.doctorId = doctorId;
+	public String getId(){
+		return id;
 	}
 	
 
