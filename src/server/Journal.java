@@ -23,6 +23,7 @@ public class Journal {
 	}
 	public void journalPrint(){
 		for (int i = 0; i< entries.size(); i++) {
+			System.out.println("hejhop!!");
 			JournalEntry e = entries.get(i);
 			System.out.println(i + ". " + e.getHospital() + " " + e.getUnit() + " " + e.getDoctorId());
 		}

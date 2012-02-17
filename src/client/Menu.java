@@ -13,7 +13,7 @@ public class Menu {
 	private static final int TYPE_PATIENT 	= 1;
 	private static final int TYPE_NURSE 	= 2;
 	private static final int TYPE_DOCTOR 	= 3;
-	public static ArrayList<Patient> patients;
+	private static ArrayList<Patient> patients;
 
 	public static void main(String[] args){
 		patients = new ArrayList<Patient>();
@@ -99,7 +99,7 @@ public class Menu {
 				for(int i = 0; i < patients.size(); i++){
 					
 					if(patients.get(i).getId().equals(personnr)){
-						System.out.print("hej!");
+						//System.out.print("hej!");
 						patients.get(i).getJournal().journalPrint();
 						break;
 					}
