@@ -1,22 +1,18 @@
-package server;
+package client;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.net.ServerSocket;
 import java.net.Socket;
 
-public class Auth extends Thread {
+public class Client {
 	
-	private int port = 10000;
-	
-	private ServerSocket server;
+	private Socket socket;
 	private BufferedReader reader;
 	private BufferedWriter writer;
 	
@@ -27,16 +23,19 @@ public class Auth extends Thread {
 	private OutputStream outputStream;
 	private OutputStreamWriter outputWriter;
 	
-	public void run() {
+	private String host;
+	private int port;
+	private String id;
+	private boolean loggedIn;
+
+	public Client(String host, int port, String id) {
+		this.host = host;
+		this.port = port;
+		this.id	  = id;
+		
 		try {
-			server = new ServerSocket(port);
+			socket = new Socket(this.host, this.port);
 			
-			System.out.println("Waiting for connection...");
-			Socket socket = server.accept();
-			
-			String client = socket.getInetAddress().getHostName();
-			System.out.println("Connection received from " + client);
-	
 			inputStream = socket.getInputStream();
 			inputReader = new InputStreamReader(inputStream);
 			reader = new BufferedReader(inputReader);
@@ -44,19 +43,29 @@ public class Auth extends Thread {
 			outputStream = socket.getOutputStream();
 			outputWriter = new OutputStreamWriter(outputStream);
 			writer = new BufferedWriter(outputWriter);
-			
+
+			sendString("login:"+this.id);
 			while (!socket.isClosed()) {
-				if (reader.ready()) {
-					String cmd = reader.readLine();
-					System.out.println(":>client " + cmd);
-					if (cmd.startsWith("login:891121")) {
-						System.out.println(":>server sending..");
-						sendString("user:891121:doctor");
+				
+				if (!loggedIn) {
+					if (reader.ready()) {
+						String s = reader.readLine();
+						System.out.println(":>server " + s);
+						if (s == "user:891121:doctor") {
+							loggedIn = true;
+							System.out.println(s);
+						}
+					}
+				} else {
+					if (reader.ready()) {
+						String s = reader.readLine();
+						System.out.println(":>server " + s);
 					}
 				}
 			}
 			
 			socket.close();
+			
 		} catch (Exception e) {
 			System.out.println(e);
 		}
@@ -73,22 +82,7 @@ public class Auth extends Thread {
 		}
 	}
 	
-	private boolean isCommand(byte[] data){
-		if (data.length == 16){
-			return true;
-		}
-		return false;	
-		
-		
+	public static void main(String[] args) {
+		Client t = new Client("localhost", 10000, "891121");
 	}
-	
-	private void commandParser(byte[] data) {
-		char command = (char) (data[0]);
-		System.out.println("command:"+command);
-	}
-	
-    public static void main(String[] args){
-	    Auth a = new Auth();
-	    a.start();
-    }
 }
