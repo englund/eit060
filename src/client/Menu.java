@@ -20,14 +20,14 @@ public class Menu {
 		Scanner sc = new Scanner(System.in);
 		Patient julia = new Patient("900401", "Julia Mauritsson");
 		Journal j = new Journal(julia);
-		j.addEntry(new JournalEntry("daaa", "naaa", "Lund", "Öronkliniken"));
-		j.addEntry(new JournalEntry("dbbb", "nbbb", "Malmö", "Öronkliniken"));
-		j.addEntry(new JournalEntry("dccc", "nccc", "Söderhamn", "Öronkliniken"));
+		j.addEntry(new JournalEntry("2012-02-19", "daaa", "naaa", "Lund", "Öronkliniken", "content"));
+		j.addEntry(new JournalEntry("2012-02-19", "dbbb", "nbbb", "Malmö", "Öronkliniken", "content"));
+		j.addEntry(new JournalEntry("2012-02-19", "dccc", "nccc", "Söderhamn", "Öronkliniken", "content"));
 		patients.add(julia);
 		
 		Patient annie = new Patient("870117", "Annie Sukino");
 		Journal a = new Journal(annie);
-		a.addEntry(new JournalEntry("d890810", "n850112", "Lund", "Ögonkliniken"));
+		a.addEntry(new JournalEntry("2012-02-19", "d890810", "n850112", "Lund", "Ögonkliniken", "content"));
 		patients.add(annie);
 		
 		Staff v = new Staff("d890810", "Viktor", "Ögonkliniken", "Lund", true);

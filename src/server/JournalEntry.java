@@ -12,11 +12,21 @@ public class JournalEntry {
 	 * @param content
 	 * @param signature
 	 */
-	public JournalEntry(String doctorId, String nurseId, String hospital, String unit) {
+	public JournalEntry(String date, String doctorId, String nurseId, String hospital, String unit, String content) {
+		this.date = date;
 		this.doctorId = doctorId;
 		this.nurseId = nurseId;
 		this.hospital = hospital;
 		this.unit = unit;
+		this.content = content;
+	}
+
+	public String getDate() {
+		return date;
+	}
+
+	public String getContent() {
+		return content;
 	}
 
 	/**
@@ -38,6 +48,10 @@ public class JournalEntry {
 	}
 	
 	public String toString() {
+		return date+":"+doctorId+":"+nurseId+":"+hospital+":"+unit+":"+content;
+	}
+	
+	public String printStr() {
 		return "Date: " + date + "\n" +
 			   "Doctor: " + doctorId + "\n" +
 			   "Nurse: " + nurseId + "\n" +

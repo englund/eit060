@@ -11,6 +11,7 @@ public class Patient extends Person {
 	public Journal getJournal(){
 		return journal;
 	}
+	
 	public String getId(){
 		return id;
 	}

@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class Server extends Thread {
 	
@@ -26,6 +27,7 @@ public class Server extends Thread {
 	
 	private Users users;
 
+	private Person user;
 	private boolean loggedIn;
 	
 	private ACL acl;
@@ -62,30 +64,45 @@ public class Server extends Thread {
 			
 			loggedIn = false;
 			
+
+			int type = -1;
+			String id = null;
+			
 			while (!socket.isClosed()) {
 				String str = waitForString();
 				System.out.println(":>server incoming " + str);
 				
 				String[] data = parseCommand(str);
-				Person user = null;
 				
 				if (!loggedIn) {
 					if (data[0].equals("login")) { // login:type:id
-						String type = data[1];
-						String id = data[2];
+						type = Integer.parseInt(data[1]);
+						id = data[2];
 						user = users.getUser(id);
 						
-						if (acl.isType(user, Integer.parseInt(type))) {
+						if (acl.isType(user, type)) {
 							System.out.println(":>server Authenticated user " + id);
 							sendString(type+":"+user.getId()); // type:id
+							loggedIn = true;
 						} else {
 							System.out.println(":>server " + id + " tried to login but it was unsucessfull!");
 							sendString("null:null"); // null:null
 						}
 					}
 				} else { // logged in
-					if (data[0].equals("other cmd")) { // cmd:id
-						
+					if (data[0].equals("getAll")) { // getAll:id
+						if (type == TYPE_PATIENT) {
+							Patient p = (Patient) user;
+							
+							p.getJournal().journalPrint();
+							ArrayList<JournalEntry> entries = p.getJournal().getEntries();
+							StringBuilder sb = new StringBuilder();
+							for (int i = 0; i < entries.size(); i++) {
+								System.out.println(entries.get(i).toString());
+								sb.append(entries.get(i).toString() + ":"); // date:doctorId:nurseId:hospital:unit:content:
+							}
+							sendString(sb.toString());
+						}
 					}
 				}
 			}

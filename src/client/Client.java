@@ -8,6 +8,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.util.ArrayList;
+
+import server.JournalEntry;
 
 public class Client {
 	
@@ -50,16 +53,33 @@ public class Client {
 	}
 	
 	public String authenticate(int utype, String uid) {
-		if (sendString("login:"+utype+":"+uid)) { // login:type:id
-			while (!socket.isClosed()) {
-				String s = waitForString();
-				String[] cmd = parseCommand(s); // förväntar oss type:id
-				String id = cmd[1];
-				if (!id.equals("null")) { // användaren autentiserad och har behörighet!
-					return id;
-				}
-				return null;
+		if (sendString("login:" + utype + ":" + uid)) { // login:type:id
+			String s = waitForString();
+			String[] cmd = parseCommand(s); // förväntar oss type:id
+			String id = cmd[1];
+			if (!id.equals("null")) { // användaren autentiserad och har behörighet!
+				return id;
 			}
+		}
+		return null;
+	}
+
+	public ArrayList<JournalEntry> getAll(String id) {
+		if (sendString("getAll:"+id)) {
+			String s = waitForString(); // (date:doctorId:nurseId:hospital:unit:content)+
+			String[] j = parseCommand(s);
+			
+			ArrayList<JournalEntry> journals = new ArrayList<JournalEntry>();
+			for (int i = 0; i < j.length; i += 6) {
+				String date = j[i];
+				String doctorId = j[i+1];
+				String nurseId = j[i+2];
+				String hospital = j[i+3];
+				String unit = j[i+4];
+				String content = j[i+5];
+				journals.add(new JournalEntry(date, doctorId, nurseId, hospital, unit, content));
+			}
+			return journals;
 		}
 		return null;
 	}
@@ -119,6 +139,12 @@ public class Client {
 		if (id != null) { // sucessfull login!
 			System.out.println(":>client User authenticated as " + id + ".");
 			
+			// Hämta alla hennes journalentries
+			ArrayList<JournalEntry> journals = client.getAll(id);
+			for (int i = 0; i < journals.size(); i++) {
+				JournalEntry entry = journals.get(i);
+				System.out.println(i + ". " + entry.getDate() + " " + entry.getHospital() + " " + entry.getDoctorId());
+			}
 		} else {
 			System.out.println("Failed to authenticate the user!");
 		}
