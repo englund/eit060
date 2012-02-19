@@ -2,20 +2,27 @@ package client;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.security.KeyStore;
 import java.util.ArrayList;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 
 import server.JournalEntry;
 import server.Patient;
 
 public class Client {
 	
-	private Socket socket;
+	private SSLSocket socket;
 	private BufferedReader reader;
 	private BufferedWriter writer;
 	
@@ -38,9 +45,20 @@ public class Client {
 		this.host	= host;
 		this.port	= port;
 		
+		System.setProperty("javax.net.ssl.keyStore", "certificates/keystore.jks");
+		System.setProperty("javax.net.ssl.keyStorePassword", "eit060"); 
+		System.setProperty("javax.net.ssl.trustStore", "certificates/truststore.jks");
+		System.setProperty("javax.net.ssl.trustStorePassword", "eit060");
+		
 		try {
-			socket = new Socket(this.host, this.port);
-			
+			SSLSocketFactory factory = (SSLSocketFactory)SSLSocketFactory.getDefault();
+
+			System.out.println(":>client making contact with " + host + ":" + port);
+		    socket = (SSLSocket)factory.createSocket(host, port);
+			socket.setUseClientMode(true);
+			socket.startHandshake();
+			System.out.println(":>client handshake is done.");
+		    
 			inputStream = socket.getInputStream();
 			inputReader = new InputStreamReader(inputStream);
 			reader = new BufferedReader(inputReader);
@@ -55,7 +73,9 @@ public class Client {
 	
 	public String authenticate(int utype, String uid) {
 		if (sendString("login:" + utype + ":" + uid)) { // login:type:id
+			System.out.println(":>client waiting..");
 			String s = waitForString();
+			System.out.println(":>client ack=" + s);
 			String[] cmd = parseCommand(s); // förväntar oss type:id
 			String id = cmd[1];
 			if (!id.equals("null")) { // användaren autentiserad och har behörighet!
@@ -112,8 +132,10 @@ public class Client {
 	public String waitForString() {
 		while (!socket.isClosed()) {
 			try {
-				if (reader.ready()) {
-					return reader.readLine().replace("\n", "");
+				String s = null;
+				if ((s = reader.readLine()) != null) {
+					System.out.println(":>client recieveing " + s);
+					return s;
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -128,6 +150,7 @@ public class Client {
 			writer.flush();
 			outputWriter.flush();
 			outputStream.flush();
+			System.out.println(":>client sending " + s);
 			return true;
 		} catch (IOException e) {
 			return false;
