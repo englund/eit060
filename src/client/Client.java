@@ -5,7 +5,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
@@ -25,13 +24,15 @@ public class Client {
 	
 	private String host;
 	private int port;
-	private String id;
-	private boolean loggedIn;
+	
+	private static final int TYPE_GOV 		= 0;
+	private static final int TYPE_PATIENT 	= 1;
+	private static final int TYPE_NURSE 	= 2;
+	private static final int TYPE_DOCTOR 	= 3;
 
-	public Client(String host, int port, String id) {
-		this.host = host;
-		this.port = port;
-		this.id	  = id;
+	public Client(String host, int port) {
+		this.host	= host;
+		this.port	= port;
 		
 		try {
 			socket = new Socket(this.host, this.port);
@@ -43,46 +44,85 @@ public class Client {
 			outputStream = socket.getOutputStream();
 			outputWriter = new OutputStreamWriter(outputStream);
 			writer = new BufferedWriter(outputWriter);
-
-			sendString("login:"+this.id);
-			while (!socket.isClosed()) {
-				
-				if (!loggedIn) {
-					if (reader.ready()) {
-						String s = reader.readLine();
-						System.out.println(":>server " + s);
-						if (s == "user:891121:doctor") {
-							loggedIn = true;
-							System.out.println(s);
-						}
-					}
-				} else {
-					if (reader.ready()) {
-						String s = reader.readLine();
-						System.out.println(":>server " + s);
-					}
-				}
-			}
-			
-			socket.close();
-			
 		} catch (Exception e) {
 			System.out.println(e);
 		}
 	}
 	
-	public void sendString(String s) {
+	public String authenticate(int utype, String uid) {
+		if (sendString("login:"+utype+":"+uid)) { // login:type:id
+			while (!socket.isClosed()) {
+				String s = waitForString();
+				String[] cmd = parseCommand(s); // förväntar oss type:id
+				String id = cmd[1];
+				if (!id.equals("null")) { // användaren autentiserad och har behörighet!
+					return id;
+				}
+				return null;
+			}
+		}
+		return null;
+	}
+	
+	public String[] parseCommand(String s) {
+		return s.split(":");
+	}
+	
+	public String waitForString() {
+		while (!socket.isClosed()) {
+			try {
+				if (reader.ready()) {
+					return reader.readLine().replace("\n", "");
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
+	
+	public boolean sendString(String s) {
 		try {
 			writer.write(s +"\n");
 			writer.flush();
 			outputWriter.flush();
 			outputStream.flush();
+			return true;
+		} catch (IOException e) {
+			return false;
+		}
+	}
+	
+	public void close() {
+		try {
+			reader.close();
+			inputReader.close();
+			inputStream.close();
+
+			writer.close();
+			outputWriter.close();
+			outputStream.close();
+			
+			socket.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
 	public static void main(String[] args) {
-		Client t = new Client("localhost", 10000, "891121");
+		Client client = new Client("localhost", 10000);
+		
+		/*
+		 * Logga in som Julia, patient.
+		 */
+		String id = client.authenticate(TYPE_PATIENT, "900401");
+		if (id != null) { // sucessfull login!
+			System.out.println(":>client User authenticated as " + id + ".");
+			
+		} else {
+			System.out.println("Failed to authenticate the user!");
+		}
+		
+		client.close();
 	}
 }

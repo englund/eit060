@@ -1,8 +1,8 @@
 package server;
 
 abstract public class Person {
-	private String id; //Globalt unikt id
-	private String name, unit, hospital;
+	protected String id; //Globalt unikt id
+	protected String name, unit, hospital;
 	
 	/**
 	 * @param id

@@ -25,5 +25,8 @@ public class Staff extends Person {
 		this.isDoctor = isDoctor;
 		isNurse = !isDoctor;
 	}
-
+	
+	public boolean isDoctor() {
+		return isDoctor;
+	}
 }

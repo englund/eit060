@@ -1,13 +1,10 @@
 package server;
 
-public class Patient {
+public class Patient extends Person {
 	private Journal journal;
-	private String id, name;
 
 	public Patient(String id, String name) {
-		//super(id, name);
-		this.id = id;
-		this.name = name;
+		super(id, name);
 		journal = new Journal(this);
 	}
 
@@ -17,6 +14,4 @@ public class Patient {
 	public String getId(){
 		return id;
 	}
-	
-
 }
