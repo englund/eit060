@@ -2,6 +2,7 @@ package server;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -9,13 +10,27 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import javax.security.cert.X509Certificate;
+
+import java.security.KeyStore;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 
 public class Server extends Thread {
 	
 	private int port = 10000;
 	
-	private Socket socket;
+	private SSLSocket socket;
 	private BufferedReader reader;
 	private BufferedWriter writer;
 	
@@ -43,14 +58,25 @@ public class Server extends Thread {
 		
 		acl = new ACL();
 		
+		System.setProperty("javax.net.ssl.keyStore", "certificates/keystore.jks");
+		System.setProperty("javax.net.ssl.keyStorePassword", "eit060");
+		System.setProperty("javax.net.ssl.trustStore", "certificates/truststore.jks");
+		System.setProperty("javax.net.ssl.trustStorePassword", "eit060");
+		
 		try {
-			ServerSocket server = new ServerSocket(port);
 			
-			System.out.println("Waiting for connection...");
-			socket = server.accept();
+			SSLServerSocketFactory factory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+            SSLServerSocket server = (SSLServerSocket) factory.createServerSocket(port);
+			server.setNeedClientAuth(true);
+            
+			System.out.println(":>server waiting for connection...");
+            socket = (SSLSocket) server.accept();
 			
-			String client = socket.getInetAddress().getHostName();
-			System.out.println("Connection received from " + client);
+			SSLSession session = socket.getSession();
+			X509Certificate cert = (X509Certificate) session.getPeerCertificateChain()[0];
+			System.out.println(":>server recieved cert " + cert.getSubjectDN().getName());
+			
+			System.out.println(":>server connection received from " + socket.getInetAddress().getHostName());
 	
 			inputStream = socket.getInputStream();
 			inputReader = new InputStreamReader(inputStream);
@@ -59,7 +85,7 @@ public class Server extends Thread {
 			outputStream = socket.getOutputStream();
 			outputWriter = new OutputStreamWriter(outputStream);
 			writer = new BufferedWriter(outputWriter);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
@@ -72,8 +98,8 @@ public class Server extends Thread {
 			String id = null;
 			
 			while (!socket.isClosed()) {
+				System.out.println(":>server waiting..");
 				String str = waitForString();
-				System.out.println(":>server incoming " + str);
 				
 				String[] data = parseCommand(str);
 				
@@ -166,8 +192,11 @@ public class Server extends Thread {
 	public String waitForString() {
 		while (!socket.isClosed()) {
 			try {
-				if (reader.ready()) {
-					return reader.readLine();
+				String s = null;
+				if ((s = reader.readLine()) != null) {
+					s = s.replace("\n", "");
+					System.out.println(":>server recieveing " + s);
+					return s;
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
