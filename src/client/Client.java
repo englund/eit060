@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import server.JournalEntry;
+import server.Patient;
 
 public class Client {
 	
@@ -64,22 +65,42 @@ public class Client {
 		return null;
 	}
 
-	public ArrayList<JournalEntry> getAll(String id) {
-		if (sendString("getAll:"+id)) {
+	public ArrayList<JournalEntry> getAllEntries(String id) {
+		if (sendString("getAllEntries:"+id)) {
 			String s = waitForString(); // (date:doctorId:nurseId:hospital:unit:content)+
 			String[] j = parseCommand(s);
 			
-			ArrayList<JournalEntry> journals = new ArrayList<JournalEntry>();
-			for (int i = 0; i < j.length; i += 6) {
-				String date = j[i];
-				String doctorId = j[i+1];
-				String nurseId = j[i+2];
-				String hospital = j[i+3];
-				String unit = j[i+4];
-				String content = j[i+5];
-				journals.add(new JournalEntry(date, doctorId, nurseId, hospital, unit, content));
+			if (!s.equals("null")) {
+				ArrayList<JournalEntry> journals = new ArrayList<JournalEntry>();
+				for (int i = 0; i < j.length; i += 6) {
+					String date = j[i];
+					String doctorId = j[i+1];
+					String nurseId = j[i+2];
+					String hospital = j[i+3];
+					String unit = j[i+4];
+					String content = j[i+5];
+					journals.add(new JournalEntry(date, doctorId, nurseId, hospital, unit, content));
+				}
+				return journals;
 			}
-			return journals;
+		}
+		return null;
+	}
+
+	private ArrayList<Patient> getAllPatients(String id) {
+		if (sendString("getAllPatients:"+id)) {
+			String s = waitForString(); // (id:name)+
+			String[] j = parseCommand(s);
+			
+			if (!s.equals("null")) {
+				ArrayList<Patient> patients = new ArrayList<Patient>();
+				for (int i = 0; i < j.length; i += 2) {
+					String idStr = j[i];
+					String nameStr = j[i+1];
+					patients.add(new Patient(idStr, nameStr));
+				}
+				return patients;
+			}
 		}
 		return null;
 	}
@@ -133,17 +154,29 @@ public class Client {
 		Client client = new Client("localhost", 10000);
 		
 		/*
-		 * Logga in som Julia, patient.
+		 * Logga in som Victor, doktor.
 		 */
-		String id = client.authenticate(TYPE_PATIENT, "900401");
+		String id = client.authenticate(TYPE_DOCTOR, "d891121");
 		if (id != null) { // sucessfull login!
 			System.out.println(":>client User authenticated as " + id + ".");
 			
-			// Hämta alla hennes journalentries
-			ArrayList<JournalEntry> journals = client.getAll(id);
-			for (int i = 0; i < journals.size(); i++) {
-				JournalEntry entry = journals.get(i);
-				System.out.println(i + ". " + entry.getDate() + " " + entry.getHospital() + " " + entry.getDoctorId());
+			// Hämta alla mina journalentries
+			System.out.println("Hämtar alla Victors entries!");
+			ArrayList<JournalEntry> journals = client.getAllEntries(id);
+			if (journals != null) {
+				for (int i = 0; i < journals.size(); i++) {
+					JournalEntry entry = journals.get(i);
+					System.out.println(i + ". " + entry.getDate() + " " + entry.getHospital() + " " + entry.getDoctorId());
+				}
+			}
+
+			System.out.println("Hämtar alla patienter jag kan se!");
+			ArrayList<Patient> patients = client.getAllPatients(id);
+			if (patients != null) {
+				for (int i = 0; i < patients.size(); i++) {
+					Patient p = patients.get(i);
+					System.out.println(i + ". " + p.getId() + " " + p.getName());
+				}
 			}
 		} else {
 			System.out.println("Failed to authenticate the user!");

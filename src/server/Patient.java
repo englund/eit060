@@ -15,4 +15,8 @@ public class Patient extends Person {
 	public String getId(){
 		return id;
 	}
+	
+	public String toString() {
+		return id + ":" + name;
+	}
 }

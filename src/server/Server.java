@@ -40,12 +40,10 @@ public class Server extends Thread {
 	public Server() {
 		users = new Users();
 		users.fillTestUsers();
-	}
-	
-	public void run() {
+		
+		acl = new ACL();
+		
 		try {
-			acl = new ACL();
-			
 			ServerSocket server = new ServerSocket(port);
 			
 			System.out.println("Waiting for connection...");
@@ -61,10 +59,15 @@ public class Server extends Thread {
 			outputStream = socket.getOutputStream();
 			outputWriter = new OutputStreamWriter(outputStream);
 			writer = new BufferedWriter(outputWriter);
-			
-			loggedIn = false;
-			
-
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		loggedIn = false;
+	}
+	
+	public void run() {
+		try {
 			int type = -1;
 			String id = null;
 			
@@ -78,7 +81,7 @@ public class Server extends Thread {
 					if (data[0].equals("login")) { // login:type:id
 						type = Integer.parseInt(data[1]);
 						id = data[2];
-						user = users.getUser(id);
+						user = users.getPerson(id);
 						
 						if (acl.isType(user, type)) {
 							System.out.println(":>server Authenticated user " + id);
@@ -86,22 +89,37 @@ public class Server extends Thread {
 							loggedIn = true;
 						} else {
 							System.out.println(":>server " + id + " tried to login but it was unsucessfull!");
-							sendString("null:null"); // null:null
+							sendString("null"); // null
 						}
 					}
 				} else { // logged in
-					if (data[0].equals("getAll")) { // getAll:id
-						if (type == TYPE_PATIENT) {
-							Patient p = (Patient) user;
-							
-							p.getJournal().journalPrint();
+					if (data[0].equals("getAllEntries")) { // getAllEntries:id
+						Patient p = users.getPatient(data[1]);
+						if (p != null) {
 							ArrayList<JournalEntry> entries = p.getJournal().getEntries();
-							StringBuilder sb = new StringBuilder();
-							for (int i = 0; i < entries.size(); i++) {
-								System.out.println(entries.get(i).toString());
-								sb.append(entries.get(i).toString() + ":"); // date:doctorId:nurseId:hospital:unit:content:
+							ArrayList<JournalEntry> returnEntries = p.getJournal().getEntries();
+	
+							for (JournalEntry entry : entries) {
+								if (acl.personCanRead(user, p, entry)) {
+									returnEntries.add(entry);
+								}
 							}
-							sendString(sb.toString());
+							sendString(entriesToString(returnEntries));
+						} else {
+							sendString("null");
+						}
+					} else if (data[0].equals("getAllPatients")) { // getAllPatients // som användaren har behörighet att se
+						ArrayList<Patient> patients = users.getPatients();
+						ArrayList<Patient> returnPatients = users.getPatients();
+						for (Patient p : patients) {
+							if (acl.canSeePatient(user, p) && !returnPatients.contains(p)) {
+								returnPatients.add(p);
+							}
+						}
+						if (returnPatients.size() > 0) {
+							sendString(patientsToString(returnPatients));
+						} else {
+							sendString("null");
 						}
 					}
 				}
@@ -111,6 +129,22 @@ public class Server extends Thread {
 		} catch (Exception e) {
 			System.out.println(e);
 		}
+	}
+
+	private String entriesToString(ArrayList<JournalEntry> entries) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < entries.size(); i++) {
+			sb.append(entries.get(i).toString() + ":"); // date:doctorId:nurseId:hospital:unit:content:
+		}
+		return sb.toString();
+	}
+	
+	private String patientsToString(ArrayList<Patient> patients) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < patients.size(); i++) {
+			sb.append(patients.get(i) + ":"); // id:name:
+		}
+		return sb.toString();
 	}
 	
 	public String[] parseCommand(String s) {
@@ -123,6 +157,7 @@ public class Server extends Thread {
 			writer.flush();
 			outputWriter.flush();
 			outputStream.flush();
+			System.out.println(":>server sending " + s);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

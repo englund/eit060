@@ -1,5 +1,7 @@
 package server;
 
+import java.util.ArrayList;
+
 public class ACL {
 	
 	private static final int TYPE_GOV 		= 0;
@@ -18,7 +20,6 @@ public class ACL {
 				typeClass = "Patient";
 			}
 			
-			System.out.println("typeClass:"+typeClass);
 			if (p.getClass().getName().equals("server."+typeClass)) {
 				if (typeClass.equals("Staff")) {
 					Staff staff = (Staff) p;
@@ -26,6 +27,59 @@ public class ACL {
 						return staff.isDoctor();
 					}
 				}
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean personCanRead(Person user, Patient person, JournalEntry entry) {
+		if (user.getClass().getName().equals("server.Government")) {
+			return true;
+		} else if (user.getClass().getName().equals("server.Staff")) {
+			Staff s = (Staff) user;
+			if (s.isDoctor()) {
+				if (entry.getDoctorId() == s.getId()
+						|| entry.getHospital() == s.getHospital()
+						|| entry.getUnit() == s.getUnit()) {
+					return true;
+				}
+			} else {
+				if (entry.getUnit() == s.getUnit()) {
+					return true;
+				}
+			}
+		} else if (user.getClass().getName().equals("server.Patient")) {
+			Patient p = (Patient) user;
+			if (p.getId() == person.getId()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean canSeePatient(Person user, Patient patient) {
+		if (user.getClass().getName().equals("server.Government")) {
+			return true;
+		} else if (user.getClass().getName().equals("server.Staff")) {
+			Staff s = (Staff) user;
+			ArrayList<JournalEntry> entries = patient.getJournal().getEntries();
+			for (JournalEntry entry : entries) {
+				if (s.isDoctor()) {
+					if (entry.getDoctorId() == s.getId()
+							|| entry.getHospital() == s.getHospital()
+							|| entry.getUnit() == s.getUnit()) {
+						return true;
+					}
+				} else {
+					if (entry.getUnit() == s.getUnit()) {
+						return true;
+					}
+				}
+			}
+		} else if (user.getClass().getName().equals("server.Patient")) {
+			Patient p = (Patient) user;
+			if (p.getId() == patient.getId()) {
 				return true;
 			}
 		}
