@@ -5,8 +5,6 @@ import java.util.ArrayList;
 public class Journal {
 	private Patient p;
 	private ArrayList<JournalEntry> entries;
-	private String currentHospital;
-	private String currentUnit;
 	
 	public Journal(Patient p){
 		this.p = p;
@@ -14,8 +12,6 @@ public class Journal {
 	}
 	public void addEntry(JournalEntry je){
 		entries.add(je);
-		currentHospital = je.getHospital();
-		currentUnit = je.getUnit();
 	}
 	
 	public ArrayList<JournalEntry> getEntries() {
@@ -23,8 +19,25 @@ public class Journal {
 	}
 	public void journalPrint(){
 		for (int i = 0; i< entries.size(); i++) {
-			JournalEntry e = entries.get(i);
-			System.out.println(i + ". " + e.getHospital() + " " + e.getUnit() + " " + e.getDoctorId());
+			System.out.println(entries.get(i));
 		}
 	}
+
+	public boolean findDoctor(String id){
+		for(JournalEntry e : entries){
+			if(e.getDoctorId().equals(id)){
+				return true;
+			}
+		}
+		return false;
+	}
+	public boolean findNurse(String nurseId) {
+		for(JournalEntry e : entries){
+			if(e.getNurseId().equals(nurseId)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
 }

@@ -5,51 +5,59 @@ import java.util.HashMap;
 
 public class Users {
 	
-	private HashMap<String, Person> users;
+	private HashMap<String, Patient> patients;
+	private HashMap<String, Staff> staff;
+	private HashMap<String, Government> govMap;
 	
 	public Users() {
-		users = new HashMap<String, Person>();
-	}
-	
-	public Person getPerson(String id) {
-		return users.get(id);
+		patients = new HashMap<String, Patient>();
+		staff = new HashMap<String, Staff>();
+		govMap = new HashMap<String, Government>();
 	}
 	
 	public Patient getPatient(String id) {
-		if (users.get(id).getClass().getName().equals("server.Patient")) {
-			return (Patient) users.get(id);
-		}
-		return null;
+		return patients.get(id);
+	}
+	
+	public Staff getStaff(String id) {
+		return staff.get(id);
 	}
 	
 	public ArrayList<Patient> getPatients() {
-		ArrayList<Patient> patients = new ArrayList<Patient>();
-		for (Person p : users.values()) {
-			if (p.getClass().getName().equals("server.Patient")) {
-				patients.add((Patient) p);
-			}
-		}
-		return patients;
+		return new ArrayList<Patient>(patients.values());
 	}
 	
 	public void fillTestUsers() {
-		Patient julia = new Patient("900401", "Julia Mauritsson");
-		Journal j = julia.getJournal();
-		j.addEntry(new JournalEntry("2012-02-19", "daaa", "naaa", "Lund", "Öronkliniken", "content"));
-		j.addEntry(new JournalEntry("2012-02-19", "dbbb", "nbbb", "Malmö", "Öronkliniken", "content"));
-		j.addEntry(new JournalEntry("2012-02-19", "dccc", "nccc", "Söderhamn", "Öronkliniken", "content"));
-		users.put(julia.getId(), julia);
+		Government gov = new Government("g01", "Socialstyrelsen");
+		govMap.put("g01", gov);
 		
-		Patient annie = new Patient("870117", "Annie Sukino");
-		Journal a = annie.getJournal();
-		a.addEntry(new JournalEntry("2012-02-19", "d891121", "n850112", "Lund", "Ögonkliniken", "content"));
-		users.put(annie.getId(), annie);
+		//Skapar patient Julia
+		Patient julia = new Patient("p01", "Julia Mauritsson");
+		julia.addJournalEntry("d01", "n01", "Eye");
+		julia.addJournalEntry("d02", "n02", "Ear");
+		patients.put(julia.getId(), julia);
 		
-		Staff victor = new Staff("d891121", "Victor", "Ögonkliniken", "Lund", true);
-		users.put(victor.getId(), victor);
+		//Skapar patient Annie
+		Patient annie = new Patient("p02", "Annie Sukino");
+		annie.addJournalEntry("d01", "n01", "Eye");
+		patients.put(annie.getId(), annie);
 		
-		Staff henrik = new Staff("n850112", "Henrik", "Ögonkliniken", "Lund", false);
-		users.put(henrik.getId(), henrik);
+		//Skapar läkare Victor
+		Staff victor = new Staff("d01", "Victor Englund", "Eye", true);
+		staff.put(victor.getId(), victor);
+		//Skapar läkare Henrik
+		Staff henrik = new Staff("d02", "Henrik Andersson", "Ear", true);
+		staff.put(henrik.getId(), henrik);
+		
+		//Skapar nurse Tina
+		Staff tina = new Staff("n01", "Christina Schmidt", "Eye", false);
+		staff.put(tina.getId(), tina);
+		Staff eliza = new Staff("n02", "Eliza Jing", "Ear", false);
+		staff.put(eliza.getId(), eliza);
+	}
+
+	public boolean userExist(String uid) {
+		return (patients.containsKey(uid) || staff.containsKey(uid) || govMap.containsKey(uid));
 	}
 
 }

@@ -1,8 +1,12 @@
 package server;
 
-public class Government extends Person {
+public class Government {
+
+	private String id;
+	private String name;
 
 	public Government(String id, String name) {
-		super(id, name);
+		this.id = id;
+		this.name = name;
 	}
 }

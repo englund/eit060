@@ -71,13 +71,13 @@ public class Client {
 		}
 	}
 	
-	public String authenticate(int utype, String uid) {
-		if (sendString("login:" + utype + ":" + uid)) { // login:type:id
+	public String authenticate(String uid) {
+		if (sendString("login:" + uid)) { // login:id
 			System.out.println(":>client waiting..");
 			String s = waitForString();
 			System.out.println(":>client ack=" + s);
-			String[] cmd = parseCommand(s); // förväntar oss type:id
-			String id = cmd[1];
+			String[] cmd = parseCommand(s); // förväntar oss id
+			String id = cmd[0];
 			if (!id.equals("null")) { // användaren autentiserad och har behörighet!
 				return id;
 			}
@@ -87,19 +87,19 @@ public class Client {
 
 	public ArrayList<JournalEntry> getAllEntries(String id) {
 		if (sendString("getAllEntries:"+id)) {
-			String s = waitForString(); // (date:doctorId:nurseId:hospital:unit:content)+
+			String s = waitForString(); // (doctorId:nurseId:unit)+
 			String[] j = parseCommand(s);
 			
 			if (!s.equals("null")) {
 				ArrayList<JournalEntry> journals = new ArrayList<JournalEntry>();
-				for (int i = 0; i < j.length; i += 6) {
-					String date = j[i];
-					String doctorId = j[i+1];
-					String nurseId = j[i+2];
-					String hospital = j[i+3];
-					String unit = j[i+4];
-					String content = j[i+5];
-					journals.add(new JournalEntry(date, doctorId, nurseId, hospital, unit, content));
+				for (int i = 0; i < j.length; i += 4) {
+					String doctorId = j[i];
+					String nurseId = j[i+1];
+					String unit = j[i+2];
+					String notes = j[i+3];
+					JournalEntry je = new JournalEntry(doctorId, nurseId, unit);
+					je.addNote(notes);
+					journals.add(je);
 				}
 				return journals;
 			}
@@ -123,6 +123,36 @@ public class Client {
 			}
 		}
 		return null;
+	}
+	
+	public boolean createEntry(String id, String docId, String nurseId, String division) {
+		if(sendString("createEntry:"+id +":" +docId +":" +nurseId +":" +division)){ //createEntry:id:docId:nurseId:division
+			String s = waitForString();
+			if(s.equals("true")) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public boolean deleteEntries(String id) {
+		if (sendString("deleteEntries:" + id)) { // deleteEntries:id
+			String s = waitForString();
+			if(s.equals("true")) {
+				return true;
+			}
+		}
+		return false;
+	}
+	public boolean addNote(String id, int entryNo, String note) {
+		if (sendString("addNote:" + id +":" +entryNo +":" +note)) { // addNote:id:entryNo:note
+			String s = waitForString();
+			if(s.equals("true")) {
+				return true;
+			}
+		}
+		return false;
+		
 	}
 	
 	public String[] parseCommand(String s) {
@@ -179,7 +209,7 @@ public class Client {
 		/*
 		 * Logga in som Victor, doktor.
 		 */
-		String id = client.authenticate(TYPE_DOCTOR, "d891121");
+		String id = client.authenticate("d01");
 		if (id != null) { // sucessfull login!
 			System.out.println(":>client User authenticated as " + id + ".");
 			
@@ -189,7 +219,7 @@ public class Client {
 			if (journals != null) {
 				for (int i = 0; i < journals.size(); i++) {
 					JournalEntry entry = journals.get(i);
-					System.out.println(i + ". " + entry.getDate() + " " + entry.getHospital() + " " + entry.getDoctorId());
+					System.out.println(i + ". " + entry);
 				}
 			}
 
@@ -198,7 +228,7 @@ public class Client {
 			if (patients != null) {
 				for (int i = 0; i < patients.size(); i++) {
 					Patient p = patients.get(i);
-					System.out.println(i + ". " + p.getId() + " " + p.getName());
+					System.out.println(i + ". " + p);
 				}
 			}
 		} else {
@@ -207,4 +237,6 @@ public class Client {
 		
 		client.close();
 	}
+
+
 }
