@@ -41,16 +41,16 @@ public class Client {
 	private static final int TYPE_NURSE 	= 2;
 	private static final int TYPE_DOCTOR 	= 3;
 
-	public Client(String host, int port) {
+	public Client(String host, int port, String keystore, String password) {
 		this.host	= host;
 		this.port	= port;
-		
-		System.setProperty("javax.net.ssl.keyStore", "certificates/keystore.jks");
-		System.setProperty("javax.net.ssl.keyStorePassword", "eit060"); 
-		System.setProperty("javax.net.ssl.trustStore", "certificates/truststore.jks");
-		System.setProperty("javax.net.ssl.trustStorePassword", "eit060");
-		
 		try {
+			System.setProperty("javax.net.ssl.keyStore", keystore);
+			System.setProperty("javax.net.ssl.keyStorePassword", password);
+			System.setProperty("javax.net.ssl.trustStore", "certificates/truststore.jks");
+			System.setProperty("javax.net.ssl.trustStorePassword", "eit060");
+		
+		
 			SSLSocketFactory factory = (SSLSocketFactory)SSLSocketFactory.getDefault();
 
 			System.out.println(":>client making contact with " + host + ":" + port);
@@ -71,20 +71,6 @@ public class Client {
 		}
 	}
 	
-	public String authenticate(String uid) {
-		if (sendString("login:" + uid)) { // login:id
-			System.out.println(":>client waiting..");
-			String s = waitForString();
-			System.out.println(":>client ack=" + s);
-			String[] cmd = parseCommand(s); // förväntar oss id
-			String id = cmd[0];
-			if (!id.equals("null")) { // användaren autentiserad och har behörighet!
-				return id;
-			}
-		}
-		return null;
-	}
-
 	public ArrayList<JournalEntry> getAllEntries(String id) {
 		if (sendString("getAllEntries:"+id)) {
 			String s = waitForString(); // (doctorId:nurseId:unit)+
@@ -102,24 +88,6 @@ public class Client {
 					journals.add(je);
 				}
 				return journals;
-			}
-		}
-		return null;
-	}
-
-	private ArrayList<Patient> getAllPatients(String id) {
-		if (sendString("getAllPatients:"+id)) {
-			String s = waitForString(); // (id:name)+
-			String[] j = parseCommand(s);
-			
-			if (!s.equals("null")) {
-				ArrayList<Patient> patients = new ArrayList<Patient>();
-				for (int i = 0; i < j.length; i += 2) {
-					String idStr = j[i];
-					String nameStr = j[i+1];
-					patients.add(new Patient(idStr, nameStr));
-				}
-				return patients;
 			}
 		}
 		return null;
@@ -204,35 +172,22 @@ public class Client {
 	}
 	
 	public static void main(String[] args) {
-		Client client = new Client("localhost", 10000);
-		
 		/*
 		 * Logga in som Victor, doktor.
 		 */
-		String id = client.authenticate("d01");
-		if (id != null) { // sucessfull login!
-			System.out.println(":>client User authenticated as " + id + ".");
-			
-			// Hämta alla mina journalentries
-			System.out.println("Hämtar alla Victors entries!");
-			ArrayList<JournalEntry> journals = client.getAllEntries(id);
-			if (journals != null) {
-				for (int i = 0; i < journals.size(); i++) {
-					JournalEntry entry = journals.get(i);
-					System.out.println(i + ". " + entry);
-				}
-			}
+		String id = "d01";
+		Client client = new Client("localhost", 10000, "certificates/" + id + ".jks", "eit060");
+		
+		System.out.println(":>client User authenticated as " + id + ".");
 
-			System.out.println("Hämtar alla patienter jag kan se!");
-			ArrayList<Patient> patients = client.getAllPatients(id);
-			if (patients != null) {
-				for (int i = 0; i < patients.size(); i++) {
-					Patient p = patients.get(i);
-					System.out.println(i + ". " + p);
-				}
+		// Hämta alla mina journalentries
+		System.out.println("Hämtar alla Victors entries!");
+		ArrayList<JournalEntry> journals = client.getAllEntries(id);
+		if (journals != null) {
+			for (int i = 0; i < journals.size(); i++) {
+				JournalEntry entry = journals.get(i);
+				System.out.println(i + ". " + entry);
 			}
-		} else {
-			System.out.println("Failed to authenticate the user!");
 		}
 		
 		client.close();

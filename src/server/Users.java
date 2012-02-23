@@ -28,7 +28,7 @@ public class Users {
 	}
 	
 	public void fillTestUsers() {
-		Government gov = new Government("g01", "Socialstyrelsen");
+		Government gov = new Government("socialstyrelsen", "Socialstyrelsen");
 		govMap.put("g01", gov);
 		
 		//Skapar patient Julia

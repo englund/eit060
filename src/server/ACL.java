@@ -37,7 +37,7 @@ public class ACL {
 				return true;
 			}
 		} else if (type == TYPE_PATIENT) {
-			if (uid == person.getId()) {
+			if (person.getId().equals(uid)) {
 				return true;
 			}
 		}
@@ -56,7 +56,7 @@ public class ACL {
 				}
 			}
 		} else if (type == TYPE_PATIENT) {
-			if (uid == patient.getId()) {
+			if (patient.getId().equals(uid)) {
 				return true;
 			}
 		}

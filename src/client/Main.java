@@ -26,12 +26,15 @@ public class Main {
 	private static final int TYPE_DOCTOR = 3;
 	private Scanner sc;
 	private Client client;
+	private String id;
 
 	public Main() {
-
 		sc = new Scanner(System.in);
-		client = new Client("localhost", 10000);
-
+		
+		System.out.print("ID: ");
+		id = sc.next();
+		System.out.print("Password: ");
+		client = new Client("localhost", 10000, "certificates/" + id + ".jks", sc.next());
 	}
 
 	public static void main(String[] args) {
@@ -42,55 +45,49 @@ public class Main {
 
 	private void buildMenu() {
 		boolean exit = false;
-		System.out.println("Please enter your id: ");
-		String id = sc.next();
 		int type = findType(id);
-		if (client.authenticate(id) != null) {
-			if (type == TYPE_PATIENT) {
-				System.out.println("Welcome patient " + id
-						+ " here is the list of your record(s):");
-				patientMenu(id, id);
-			} else if (type == TYPE_DOCTOR) {
+		if (type == TYPE_PATIENT) {
+			System.out.println("Welcome patient " + id
+					+ " here is the list of your record(s):");
+			patientMenu(id, id);
+		} else if (type == TYPE_DOCTOR) {
+			System.out.println("Welcome doctor, what would you like to do?");
+			do {
+				System.out.println("1. Read a record");
+				System.out.println("2. Write to a record");
 				System.out
-						.println("Welcome doctor, what would you like to do?");
-				do {
-					System.out.println("1. Read a record");
-					System.out.println("2. Write to a record");
-					System.out
-							.println("3. Add a new record to an existing patient");
-					int choice = sc.nextInt();
-					docMenu(choice, id);
-					System.out.println("Would you like to exit? Y/N");
-					String s = sc.next();
-					exit = s.equals("Y") || s.equals("y");
-				} while (!exit);
+						.println("3. Add a new record to an existing patient");
+				int choice = sc.nextInt();
+				docMenu(choice, id);
+				System.out.println("Would you like to exit? Y/N");
+				String s = sc.next();
+				exit = s.equals("Y") || s.equals("y");
+			} while (!exit);
 
-			} else if (type == TYPE_NURSE) {
-				System.out.println("Welcome nurse, what would you like to do?");
-				do {
-					System.out.println("1. Read a record");
-					System.out.println("2. Write to a record");
-					int choice = sc.nextInt();
-					nurseMenu(choice, id);
-					System.out.println("Would you like to exit? Y/N");
-					String s = sc.next();
-					exit = s.equals("Y") || s.equals("y");
-				} while (!exit);
-			} else {
-				System.out
-						.println("Welcome goverment agency, what would you like to do?");
-				do {
-					System.out.println("1. Read a record");
-					System.out.println("2. Delete a record");
-					int choice = sc.nextInt();
-					govMenu(choice, id);
-					System.out.println("Would you like to exit? Y/N");
-					String s = sc.next();
-					exit = s.equals("Y") || s.equals("y");
-				} while (!exit);
-			}
+		} else if (type == TYPE_NURSE) {
+			System.out.println("Welcome nurse, what would you like to do?");
+			do {
+				System.out.println("1. Read a record");
+				System.out.println("2. Write to a record");
+				int choice = sc.nextInt();
+				nurseMenu(choice, id);
+				System.out.println("Would you like to exit? Y/N");
+				String s = sc.next();
+				exit = s.equals("Y") || s.equals("y");
+			} while (!exit);
+		} else {
+			System.out
+					.println("Welcome goverment agency, what would you like to do?");
+			do {
+				System.out.println("1. Read a record");
+				System.out.println("2. Delete a record");
+				int choice = sc.nextInt();
+				govMenu(choice, id);
+				System.out.println("Would you like to exit? Y/N");
+				String s = sc.next();
+				exit = s.equals("Y") || s.equals("y");
+			} while (!exit);
 		}
-
 	}
 
 	private void patientMenu(String id, String caller) {
