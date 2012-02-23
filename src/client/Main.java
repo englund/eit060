@@ -113,16 +113,21 @@ public class Main {
 			break;
 		case 2:
 			ArrayList<JournalEntry> je = client.getAllEntries(id);
-			System.out
-					.println("Which record would you like to add a note to? (enter a number)");
-			for (int i = 0; i < je.size(); i++) {
-				System.out.println(i + " " + je.get(i));
-			}
-			int no = sc.nextInt();
-			//JournalEntry j = je.get(no);
-			System.out.println("Add note :");
-			if(!client.addNote(id, no, sc.next())){
-				System.out.println("You have no right to perform this action");
+			if(je != null){
+				
+				System.out
+						.println("Which record would you like to add a note to? (enter a number)");
+				for (int i = 0; i < je.size(); i++) {
+					System.out.println(i + " " + je.get(i));
+				}
+				int no = sc.nextInt();
+				//JournalEntry j = je.get(no);
+				System.out.println("Add note :");
+				if(!client.addNote(id, no, sc.next())){
+					System.out.println("You have no right to perform this action");
+				}
+			}else{
+				System.out.println("Finns inga journaler att skriva till");
 			}
 			break;
 
